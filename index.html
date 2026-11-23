@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Pilota Ordini</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+body{margin:0}
+/* Layout: una sola tabella a schermo intero con prima riga e prima colonna fisse; una riga per ordine, 8 colonne di stato cliccabili */
+:root{
+  --bg:#f5f4f7; --surface:#ffffff; --surface2:#faf9fc; --fg:#1d1a26; --muted:#6b6679; --line:#e3e0ea;
+  --accent:#5b3fd1; --accent-soft:#ece8fb; --ok:#1f8a5b; --bad:#c23a3a; --bad-soft:#fbe4e4;
+  --font-display:'Space Grotesk',system-ui,sans-serif; --font-body:'Inter',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#14121b; --surface:#1d1a27; --surface2:#221f2e; --fg:#eeebf5; --muted:#9d97ad; --line:#2f2b3d;
+  --accent:#9b86ff; --accent-soft:#2a2445; --ok:#4cc58d; --bad:#ff7b7b; --bad-soft:#3d2020; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14121b; --surface:#1d1a27; --surface2:#221f2e; --fg:#eeebf5; --muted:#9d97ad; --line:#2f2b3d;
+  --accent:#9b86ff; --accent-soft:#2a2445; --ok:#4cc58d; --bad:#ff7b7b; --bad-soft:#3d2020; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.4;
+  padding-block:14px 14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-bottom:10px}
+h1{font-family:var(--font-display);font-size:22px;margin:0;letter-spacing:-.01em}
+.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.sync.ok i{background:var(--ok)}.sync.err i{background:var(--bad)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+input,select,textarea,button{font:inherit;color:var(--fg)}
+.bar input[type=search],.bar input.me{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 10px;min-width:0}
+.bar input[type=search]{flex:1 1 200px}
+.bar label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap}
+.bar input[type=search]{flex:1 1 140px}
+.bar input.me{width:140px}
+button{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.gw{overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;height:70vh;position:relative;-webkit-overflow-scrolling:touch}
+table{border-collapse:separate;border-spacing:0;table-layout:fixed;width:max-content;min-width:100%}
+th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;vertical-align:middle;background:var(--surface)}
+thead th{position:sticky;top:0;z-index:2;background:var(--surface2);font-size:11.5px;font-weight:500;color:var(--muted);text-align:center;padding:8px 4px;line-height:1.2;overflow-wrap:anywhere}
+thead th b{display:block;font-family:var(--font-display);font-size:17px;color:var(--fg);font-variant-numeric:tabular-nums}
+thead th.st{box-shadow:inset 0 3px 0 hsl(var(--h) 60% 52%)}
+th.c0,td.c0{position:sticky;left:0;z-index:3;width:200px;min-width:200px;box-shadow:2px 0 0 var(--line)}
+thead th.c0{z-index:5;text-align:left;padding:8px 10px;vertical-align:bottom}
+td.c0{padding:6px 8px}
+.w-prod{width:230px}.w-own{width:120px}.w-dt{width:128px}.w-st{width:86px}.w-note{width:240px}.w-del{width:46px}
+td input,td textarea{width:100%;border:0;background:transparent;padding:6px 8px;border-radius:4px;display:block;resize:none}
+td textarea{height:52px;line-height:1.3}
+td input:hover,td textarea:hover{background:var(--accent-soft)}
+td input:focus,td textarea:focus{background:var(--accent-soft)}
+td.c0 .cl{font-family:var(--font-display);font-weight:700;font-size:15px;padding:4px 6px}
+td.c0 .rf{font-size:12.5px;color:var(--muted);padding:2px 6px}
+td.c0 .meta{font-size:11px;color:var(--muted);padding:2px 6px 0}
+td.due.late input{color:var(--bad);font-weight:600;background:var(--bad-soft)}
+.cell{all:unset;box-sizing:border-box;display:block;width:100%;height:68px;line-height:68px;text-align:center;cursor:pointer;color:#fff;font-size:16px}
+.cell:hover{background:var(--accent-soft)}
+.cell:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.cell.cur{background:hsl(var(--h) 58% 40%);font-weight:700}
+.cell.cur:hover{background:hsl(var(--h) 58% 34%)}
+.ro .cell,.ro td input,.ro td textarea{pointer-events:none}
+td.del{text-align:center}
+td.del button{padding:4px 8px;color:var(--muted);border-color:transparent;background:transparent}
+td.del button:hover{color:var(--bad)}
+td.del button.arm{color:#fff;background:var(--bad);border-color:var(--bad);font-size:11px}
+.empty{padding:36px 16px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--fg);font-family:var(--font-display);font-size:16px;margin-bottom:4px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:13px;z-index:20;max-width:90vw}
+.hint{color:var(--muted);font-size:12px;margin:8px 0 0}
+@media (max-width:640px){
+  h1{font-size:19px}
+  th.c0,td.c0{width:150px;min-width:150px}
+  .w-st{width:78px}
+  .cell{height:60px;line-height:60px}
+  .bar input.me{width:100%;flex:1 1 100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Pilota Ordini</h1>
+  <div class="sync" id="sync" role="status"><i></i><span id="syncT">Collegamento in corso…</span></div>
+</div>
+
+<div class="bar">
+  <input type="search" id="q" placeholder="Cerca cliente, ordine o prodotto" aria-label="Cerca">
+  <label><input type="checkbox" id="hideDone"> Nascondi evasi</label>
+  <input class="me" id="me" placeholder="Il tuo nome" aria-label="Il tuo nome, per registrare chi modifica" autocomplete="off">
+  <button id="add" class="primary" type="button" disabled>+ Nuovo ordine</button>
+</div>
+
+<div class="gw" id="gw">
+  <table id="tbl">
+    <thead><tr id="hr"></tr></thead>
+    <tbody id="tb"></tbody>
+  </table>
+  <div class="empty" id="empty"><b>Carico gli ordini…</b>Un momento, collego l'archivio dati.</div>
+</div>
+<p class="hint">Clicca una cella di stato per spostare l'ordine. Scrivi direttamente nelle celle: si salva da solo e tutti lo vedono subito.</p>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="config.js"></script>
+<script>
+const STAGES=[
+  {k:"Ordine arrivato",h:262},{k:"Richiesto al fornitore",h:240},{k:"Mail inviata al fornitore",h:214},
+  {k:"Risposta del fornitore",h:190},{k:"Ordine pagato",h:165},{k:"Ritirato",h:140},{k:"Spedito",h:118},{k:"Evaso",h:150}
+];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const fmtTs=t=>{const d=new Date(t);return d.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"})+" "+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})};
+let fb=null,docs=new Map(),loaded=false;
+const lsGet=k=>{try{return localStorage.getItem(k)||""}catch(e){return ""}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+$("#me").value=lsGet("pilota-nome");
+$("#me").addEventListener("change",e=>lsSet("pilota-nome",e.target.value.trim()));
+const who=()=>$("#me").value.trim()||"Qualcuno";
+
+$("#hr").innerHTML=`<th class="c0">Cliente e ordine</th><th class="w-prod">Prodotti</th><th class="w-own">Responsabile</th><th class="w-dt">Data ordine</th><th class="w-dt">Scadenza</th>`+
+  STAGES.map(s=>`<th class="st w-st" style="--h:${s.h}"><b data-cnt>0</b>${s.k}</th>`).join("")+`<th class="w-note">Note</th><th class="w-del"></th>`;
+
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,3500)}
+function setSync(kind,text){const s=$("#sync");s.className="sync "+kind;$("#syncT").textContent=text}
+
+function rowHTML(id,d){
+  const late=d.due&&d.due<todayStr()&&d.st<7;
+  return `<td class="c0"><input class="cl" data-f="client" value="${esc(d.client)}" placeholder="Cliente" aria-label="Cliente">
+    <input class="rf" data-f="ref" value="${esc(d.ref)}" placeholder="N. ordine" aria-label="Numero ordine">
+    <div class="meta">${d.updatedAt?`Modificato da ${esc(d.updatedBy||"Qualcuno")}, ${fmtTs(d.updatedAt)}`:""}</div></td>
+    <td><textarea data-f="products" placeholder="Prodotti e quantità" aria-label="Prodotti">${esc(d.products)}</textarea></td>
+    <td><input data-f="owner" list="owners" value="${esc(d.owner)}" placeholder="Chi lo segue" aria-label="Responsabile"></td>
+    <td><input type="date" data-f="orderDate" value="${esc(d.orderDate)}" aria-label="Data ordine"></td>
+    <td class="due ${late?"late":""}"><input type="date" data-f="due" value="${esc(d.due)}" aria-label="Scadenza"></td>
+    ${STAGES.map((s,i)=>`<td class="st"><button type="button" class="cell ${i===d.st?"cur":""}" style="--h:${s.h}" data-st="${i}" aria-pressed="${i===d.st}" aria-label="${esc(d.client||"Ordine")}: ${s.k}">${i===d.st?"●":""}</button></td>`).join("")}
+    <td><textarea data-f="note" placeholder="Note" aria-label="Note">${esc(d.note)}</textarea></td>
+    <td class="del"><button type="button" data-del aria-label="Elimina ordine">✕</button></td>`;
+}
+
+function visible(){
+  const q=$("#q").value.trim().toLowerCase(),hd=$("#hideDone").checked;
+  return [...docs.entries()].filter(([id,d])=>{
+    if(hd&&d.st===7)return false;
+    if(q&&!((d.client||"")+" "+(d.ref||"")+" "+(d.products||"")+" "+(d.owner||"")).toLowerCase().includes(q))return false;
+    return true;
+  }).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+}
+
+function render(){
+  const tb=$("#tb"),list=visible(),keep=new Set(list.map(x=>x[0]));
+  [...tb.children].forEach(tr=>{if(!keep.has(tr.dataset.id))tr.remove()});
+  const existing=new Map([...tb.children].map(tr=>[tr.dataset.id,tr]));
+  list.forEach(([id,d],i)=>{
+    const sig=JSON.stringify(d);let tr=existing.get(id);
+    if(!tr){tr=document.createElement("tr");tr.dataset.id=id;tr.innerHTML=rowHTML(id,d);tr._sig=sig}
+    else if(tr._sig!==sig&&!tr.contains(document.activeElement)){tr.innerHTML=rowHTML(id,d);tr._sig=sig}
+    if(tb.children[i]!==tr)tb.insertBefore(tr,tb.children[i]||null);
+  });
+  const counts=STAGES.map(()=>0);list.forEach(([,d])=>{if(counts[d.st]!=null)counts[d.st]++});
+  document.querySelectorAll("[data-cnt]").forEach((el,i)=>el.textContent=counts[i]);
+  const ow=new Set();docs.forEach(d=>{if(d.owner)ow.add(d.owner)});
+  let dl=document.getElementById("owners");if(!dl){dl=document.createElement("datalist");dl.id="owners";document.body.appendChild(dl)}
+  dl.innerHTML=[...ow].map(o=>`<option value="${esc(o)}">`).join("");
+  const em=$("#empty");
+  if(!loaded){em.hidden=false}
+  else if(!docs.size){em.hidden=false;em.innerHTML=`<b>Nessun ordine</b>Aggiungi il primo con “+ Nuovo ordine”.`}
+  else if(!list.length){em.hidden=false;em.innerHTML=`<b>Nessun risultato</b>Cambia la ricerca o i filtri.`}
+  else em.hidden=true;
+}
+
+const queue=new Map();
+function write(id,patch){
+  if(!fb)return;
+  const prev=queue.get(id)||Promise.resolve();
+  const p=prev.then(()=>fb.ref("orders/"+id).update(Object.assign({},patch,{updatedBy:who(),updatedAt:Date.now()}))).catch(onErr);
+  queue.set(id,p);
+}
+function onErr(e){
+  if(e&&/permission/i.test(e.code||e.message||"")){toast("Il database rifiuta la modifica. Controlla le regole di Firebase (vedi README).")}
+  else toast("Salvataggio non riuscito. Riprova tra poco.");
+}
+
+document.addEventListener("change",e=>{
+  const f=e.target.closest("[data-f]");if(!f)return;
+  const tr=f.closest("tr");if(!tr||!tr.dataset.id)return;
+  write(tr.dataset.id,{[f.dataset.f]:f.value.trim()});
+});
+document.addEventListener("click",e=>{
+  const st=e.target.closest("[data-st]");
+  if(st){const id=st.closest("tr").dataset.id;const n=+st.dataset.st;const d=docs.get(id);if(d&&d.st!==n)write(id,{st:n});return}
+  const del=e.target.closest("[data-del]");
+  if(del){
+    if(del.classList.contains("arm")){const id=del.closest("tr").dataset.id;fb&&fb.ref("orders/"+id).remove().catch(onErr)}
+    else{del.classList.add("arm");del.textContent="Elimina?";setTimeout(()=>{del.classList.remove("arm");del.textContent="✕"},3000)}
+  }
+});
+$("#q").addEventListener("input",render);
+$("#hideDone").addEventListener("change",render);
+$("#add").addEventListener("click",()=>{
+  if(!fb)return;
+  const me=$("#me").value.trim();
+  fb.ref("orders").push({client:"",ref:"",products:"",owner:me,orderDate:todayStr(),due:"",note:"",st:0,createdAt:Date.now(),updatedBy:who(),updatedAt:Date.now()})
+    .then(()=>{$("#gw").scrollTo({top:0,left:0})}).catch(onErr);
+});
+
+function fit(){const gw=$("#gw");const t=gw.getBoundingClientRect().top+window.scrollY;gw.style.height=Math.max(320,window.innerHeight-t-48)+"px"}
+addEventListener("resize",fit);fit();render();
+
+(function init(){
+  const cfg=window.FIREBASE_CONFIG;
+  if(!cfg||!cfg.databaseURL||/INSERISCI/.test(cfg.databaseURL)||typeof firebase==="undefined"){
+    setSync("err","Archivio dati non ancora collegato");
+    $("#empty").innerHTML="<b>Manca la configurazione</b>Compila il file config.js con i dati del tuo progetto Firebase (istruzioni nel README).";
+    return;
+  }
+  firebase.initializeApp(cfg);
+  fb=firebase.database();
+  $("#add").disabled=false;
+  const timer=setTimeout(()=>{if(!loaded)setSync("err","Dati non raggiungibili al momento")},10000);
+  fb.ref(".info/connected").on("value",s=>{if(loaded)setSync(s.val()?"ok":"err",s.val()?"Sincronizzato, modifiche condivise in tempo reale":"Offline: riconnessione in corso")});
+  fb.ref("orders").on("value",snap=>{
+    docs=new Map(Object.entries(snap.val()||{}));
+    loaded=true;clearTimeout(timer);setSync("ok","Sincronizzato, modifiche condivise in tempo reale");
+    render();
+  },err=>{clearTimeout(timer);setSync("err","Collegamento interrotto");onErr(err)});
+})();
+</script>
+</body>
+</html>
