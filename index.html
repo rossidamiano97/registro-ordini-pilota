@@ -45,19 +45,21 @@ th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);pad
 thead th{position:sticky;top:0;z-index:2;background:var(--surface2);font-size:11.5px;font-weight:500;color:var(--muted);text-align:center;padding:8px 4px;line-height:1.2;overflow-wrap:anywhere}
 thead th b{display:block;font-family:var(--font-display);font-size:17px;color:var(--fg);font-variant-numeric:tabular-nums}
 thead th.st{box-shadow:inset 0 3px 0 hsl(var(--h) 60% 52%)}
-th.c0,td.c0{position:sticky;left:0;z-index:3;width:200px;min-width:200px;box-shadow:2px 0 0 var(--line)}
+th.c0,td.c0{position:sticky;left:0;z-index:3;width:236px;min-width:236px;box-shadow:2px 0 0 var(--line)}
 thead th.c0{z-index:5;text-align:left;padding:8px 10px;vertical-align:bottom}
 td.c0{padding:6px 8px}
 .w-prod{width:230px}.w-own{width:120px}.w-dt{width:128px}.w-st{width:86px}.w-note{width:240px}.w-del{width:46px}
 td input,td textarea{width:100%;border:0;background:transparent;padding:6px 8px;border-radius:4px;display:block;resize:none}
-td textarea{height:52px;line-height:1.3}
+td textarea{height:96px;line-height:1.3}
 td input:hover,td textarea:hover{background:var(--accent-soft)}
 td input:focus,td textarea:focus{background:var(--accent-soft)}
 td.c0 .cl{font-family:var(--font-display);font-weight:700;font-size:15px;padding:4px 6px}
-td.c0 .rf{font-size:12.5px;color:var(--muted);padding:2px 6px}
+td.c0 label.rf{display:flex;align-items:center;gap:4px;font-size:12.5px;padding:0 4px}
+td.c0 label.rf span{flex:0 0 74px;font-size:11px;color:var(--muted);line-height:1.1}
+td.c0 label.rf input{padding:4px 6px;font-size:13px}
 td.c0 .meta{font-size:11px;color:var(--muted);padding:2px 6px 0}
 td.due.late input{color:var(--bad);font-weight:600;background:var(--bad-soft)}
-.cell{all:unset;box-sizing:border-box;display:block;width:100%;height:68px;line-height:68px;text-align:center;cursor:pointer;color:#fff;font-size:16px}
+.cell{all:unset;box-sizing:border-box;display:block;width:100%;height:112px;line-height:112px;text-align:center;cursor:pointer;color:#fff;font-size:16px}
 .cell:hover{background:var(--accent-soft)}
 .cell:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .cell.cur{background:hsl(var(--h) 58% 40%);font-weight:700}
@@ -71,11 +73,21 @@ td.del button.arm{color:#fff;background:var(--bad);border-color:var(--bad);font-
 .empty b{display:block;color:var(--fg);font-family:var(--font-display);font-size:16px;margin-bottom:4px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:13px;z-index:20;max-width:90vw}
 .hint{color:var(--muted);font-size:12px;margin:8px 0 0}
+.stg{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.stg h2{font-family:var(--font-display);font-size:15px;margin:0 0 4px}
+.stg p{margin:0 0 10px;color:var(--muted);font-size:12.5px}
+.stg ol{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:6px;counter-reset:n}
+.stg li{display:flex;gap:6px;align-items:center}
+.stg li::before{counter-increment:n;content:counter(n);flex:0 0 22px;text-align:center;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.stg li input{flex:1 1 auto;min-width:0;border:1px solid var(--line);background:var(--surface2);border-radius:6px;padding:6px 8px}
+.stg li button{padding:5px 9px}
+.stg li button.arm{background:var(--bad);border-color:var(--bad);color:#fff}
+.stg .row{display:flex;gap:8px;flex-wrap:wrap}
 @media (max-width:640px){
   h1{font-size:19px}
-  th.c0,td.c0{width:150px;min-width:150px}
+  th.c0,td.c0{width:176px;min-width:176px}
+  td.c0 label.rf span{flex-basis:56px}
   .w-st{width:78px}
-  .cell{height:60px;line-height:60px}
   .bar input.me{width:100%;flex:1 1 100%}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -91,8 +103,16 @@ td.del button.arm{color:#fff;background:var(--bad);border-color:var(--bad);font-
   <input type="search" id="q" placeholder="Cerca cliente, ordine o prodotto" aria-label="Cerca">
   <label><input type="checkbox" id="hideDone"> Nascondi evasi</label>
   <input class="me" id="me" placeholder="Il tuo nome" aria-label="Il tuo nome, per registrare chi modifica" autocomplete="off">
+  <button id="stBtn" type="button" aria-expanded="false" aria-controls="stg">Stati avanzamento</button>
   <button id="add" class="primary" type="button" disabled>+ Nuovo ordine</button>
 </div>
+
+<section class="stg" id="stg" hidden>
+  <h2>Stati di avanzamento</h2>
+  <p>Rinomina, riordina, aggiungi o togli gli stati. Vale per tutti e si aggiorna subito. L'ultimo stato conta come ordine concluso.</p>
+  <ol id="stList"></ol>
+  <div class="row"><button type="button" id="stAdd" class="primary">+ Aggiungi stato</button><button type="button" id="stClose">Chiudi</button></div>
+</section>
 
 <div class="gw" id="gw">
   <table id="tbl">
@@ -108,10 +128,10 @@ td.del button.arm{color:#fff;background:var(--bad);border-color:var(--bad);font-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="config.js"></script>
 <script>
-const STAGES=[
-  {k:"Ordine arrivato",h:262},{k:"Richiesto al fornitore",h:240},{k:"Mail inviata al fornitore",h:214},
-  {k:"Risposta del fornitore",h:190},{k:"Ordine pagato",h:165},{k:"Ritirato",h:140},{k:"Spedito",h:118},{k:"Evaso",h:150}
-];
+const DEFAULT_STAGES=["Ordine arrivato","Richiesto al fornitore","Mail inviata al fornitore","Risposta del fornitore","Ordine pagato","Ritirato","Spedito","Evaso"].map((name,i)=>({id:i,name}));
+let stages=DEFAULT_STAGES.slice();
+const hue=(i,n)=>n<2?262:Math.round(262-(i/(n-1))*112);
+const stIdx=d=>{const i=stages.findIndex(s=>s.id==d.st);return i<0?0:i};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
@@ -122,48 +142,53 @@ const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 $("#me").value=lsGet("pilota-nome");
 $("#me").addEventListener("change",e=>lsSet("pilota-nome",e.target.value.trim()));
 const who=()=>$("#me").value.trim()||"Qualcuno";
+const refC=d=>d.refCliente!=null?d.refCliente:(d.ref||"");
 
-$("#hr").innerHTML=`<th class="c0">Cliente e ordine</th><th class="w-prod">Prodotti</th><th class="w-own">Responsabile</th><th class="w-dt">Data ordine</th><th class="w-dt">Scadenza</th>`+
-  STAGES.map(s=>`<th class="st w-st" style="--h:${s.h}"><b data-cnt>0</b>${s.k}</th>`).join("")+`<th class="w-note">Note</th><th class="w-del"></th>`;
-
+function renderHead(){
+  $("#hr").innerHTML=`<th class="c0">Cliente e codici ordine</th><th class="w-prod">Prodotti</th><th class="w-own">Responsabile</th><th class="w-dt">Data ordine</th><th class="w-dt">Scadenza</th>`+
+    stages.map((s,i)=>`<th class="st w-st" style="--h:${hue(i,stages.length)}"><b data-cnt>0</b>${esc(s.name)}</th>`).join("")+`<th class="w-note">Note</th><th class="w-del"></th>`;
+}
 function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,3500)}
 function setSync(kind,text){const s=$("#sync");s.className="sync "+kind;$("#syncT").textContent=text}
 
 function rowHTML(id,d){
-  const late=d.due&&d.due<todayStr()&&d.st<7;
+  const cur=stIdx(d),last=stages.length-1;
+  const late=d.due&&d.due<todayStr()&&cur<last;
   return `<td class="c0"><input class="cl" data-f="client" value="${esc(d.client)}" placeholder="Cliente" aria-label="Cliente">
-    <input class="rf" data-f="ref" value="${esc(d.ref)}" placeholder="N. ordine" aria-label="Numero ordine">
+    <label class="rf"><span>Ord. cliente</span><input data-f="refCliente" value="${esc(refC(d))}" placeholder="Codice ordine cliente" aria-label="Codice ordine cliente"></label>
+    <label class="rf"><span>Ord. Vigo Mode</span><input data-f="refVigo" value="${esc(d.refVigo)}" placeholder="Codice ordine Vigo Mode" aria-label="Codice ordine Vigo Mode"></label>
     <div class="meta">${d.updatedAt?`Modificato da ${esc(d.updatedBy||"Qualcuno")}, ${fmtTs(d.updatedAt)}`:""}</div></td>
     <td><textarea data-f="products" placeholder="Prodotti e quantità" aria-label="Prodotti">${esc(d.products)}</textarea></td>
     <td><input data-f="owner" list="owners" value="${esc(d.owner)}" placeholder="Chi lo segue" aria-label="Responsabile"></td>
     <td><input type="date" data-f="orderDate" value="${esc(d.orderDate)}" aria-label="Data ordine"></td>
     <td class="due ${late?"late":""}"><input type="date" data-f="due" value="${esc(d.due)}" aria-label="Scadenza"></td>
-    ${STAGES.map((s,i)=>`<td class="st"><button type="button" class="cell ${i===d.st?"cur":""}" style="--h:${s.h}" data-st="${i}" aria-pressed="${i===d.st}" aria-label="${esc(d.client||"Ordine")}: ${s.k}">${i===d.st?"●":""}</button></td>`).join("")}
+    ${stages.map((s,i)=>`<td class="st"><button type="button" class="cell ${i===cur?"cur":""}" style="--h:${hue(i,stages.length)}" data-st="${s.id}" aria-pressed="${i===cur}" aria-label="${esc(d.client||"Ordine")}: ${esc(s.name)}">${i===cur?"●":""}</button></td>`).join("")}
     <td><textarea data-f="note" placeholder="Note" aria-label="Note">${esc(d.note)}</textarea></td>
     <td class="del"><button type="button" data-del aria-label="Elimina ordine">✕</button></td>`;
 }
 
 function visible(){
-  const q=$("#q").value.trim().toLowerCase(),hd=$("#hideDone").checked;
+  const q=$("#q").value.trim().toLowerCase(),hd=$("#hideDone").checked,last=stages.length-1;
   return [...docs.entries()].filter(([id,d])=>{
-    if(hd&&d.st===7)return false;
-    if(q&&!((d.client||"")+" "+(d.ref||"")+" "+(d.products||"")+" "+(d.owner||"")).toLowerCase().includes(q))return false;
+    if(hd&&stIdx(d)===last)return false;
+    if(q&&!((d.client||"")+" "+refC(d)+" "+(d.refVigo||"")+" "+(d.products||"")+" "+(d.owner||"")).toLowerCase().includes(q))return false;
     return true;
   }).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
 }
 
 function render(){
   const tb=$("#tb"),list=visible(),keep=new Set(list.map(x=>x[0]));
+  const sSig=JSON.stringify(stages);
   [...tb.children].forEach(tr=>{if(!keep.has(tr.dataset.id))tr.remove()});
   const existing=new Map([...tb.children].map(tr=>[tr.dataset.id,tr]));
   list.forEach(([id,d],i)=>{
-    const sig=JSON.stringify(d);let tr=existing.get(id);
+    const sig=JSON.stringify(d)+sSig;let tr=existing.get(id);
     if(!tr){tr=document.createElement("tr");tr.dataset.id=id;tr.innerHTML=rowHTML(id,d);tr._sig=sig}
     else if(tr._sig!==sig&&!tr.contains(document.activeElement)){tr.innerHTML=rowHTML(id,d);tr._sig=sig}
     if(tb.children[i]!==tr)tb.insertBefore(tr,tb.children[i]||null);
   });
-  const counts=STAGES.map(()=>0);list.forEach(([,d])=>{if(counts[d.st]!=null)counts[d.st]++});
-  document.querySelectorAll("[data-cnt]").forEach((el,i)=>el.textContent=counts[i]);
+  const counts=stages.map(()=>0);list.forEach(([,d])=>{counts[stIdx(d)]++});
+  document.querySelectorAll("[data-cnt]").forEach((el,i)=>el.textContent=counts[i]||0);
   const ow=new Set();docs.forEach(d=>{if(d.owner)ow.add(d.owner)});
   let dl=document.getElementById("owners");if(!dl){dl=document.createElement("datalist");dl.id="owners";document.body.appendChild(dl)}
   dl.innerHTML=[...ow].map(o=>`<option value="${esc(o)}">`).join("");
@@ -174,6 +199,47 @@ function render(){
   else em.hidden=true;
 }
 
+/* ---- gestione stati ---- */
+function renderPanel(){
+  const p=$("#stList");if(p.contains(document.activeElement))return;
+  p.innerHTML=stages.map((s,i)=>`<li data-i="${i}"><input data-sn value="${esc(s.name)}" aria-label="Nome stato ${i+1}">
+    <button type="button" data-mv="-1" ${i===0?"disabled":""} aria-label="Sposta su">▲</button>
+    <button type="button" data-mv="1" ${i===stages.length-1?"disabled":""} aria-label="Sposta giù">▼</button>
+    <button type="button" data-sdel aria-label="Elimina stato">✕</button></li>`).join("");
+}
+function saveStages(){
+  if(!fb)return;
+  fb.ref("config/stages").set(stages.map(s=>({id:s.id,name:s.name}))).catch(onErr);
+}
+function applyStages(){renderHead();renderPanel();render()}
+$("#stBtn").addEventListener("click",()=>{const p=$("#stg");p.hidden=!p.hidden;$("#stBtn").setAttribute("aria-expanded",String(!p.hidden));if(!p.hidden)renderPanel()});
+$("#stClose").addEventListener("click",()=>{$("#stg").hidden=true;$("#stBtn").setAttribute("aria-expanded","false")});
+$("#stAdd").addEventListener("click",()=>{
+  const id=stages.reduce((m,s)=>Math.max(m,+s.id),-1)+1;
+  stages=stages.concat([{id,name:"Nuovo stato"}]);applyStages();saveStages();
+  const ins=$("#stList").querySelectorAll("input");const l=ins[ins.length-1];if(l){l.focus();l.select()}
+});
+$("#stList").addEventListener("change",e=>{
+  const i=+e.target.closest("li").dataset.i;const v=e.target.value.trim();
+  if(!v){e.target.value=stages[i].name;return}
+  if(v===stages[i].name)return;
+  stages=stages.map((s,k)=>k===i?{id:s.id,name:v}:s);applyStages();saveStages();
+});
+$("#stList").addEventListener("click",e=>{
+  const li=e.target.closest("li");if(!li)return;const i=+li.dataset.i;
+  const mv=e.target.closest("[data-mv]");
+  if(mv){const j=i+ +mv.dataset.mv;if(j<0||j>=stages.length)return;const a=stages.slice();[a[i],a[j]]=[a[j],a[i]];stages=a;applyStages();saveStages();return}
+  const del=e.target.closest("[data-sdel]");
+  if(del){
+    if(stages.length<=2){toast("Servono almeno due stati.");return}
+    const n=[...docs.values()].filter(d=>stIdx(d)===i).length;
+    if(n){toast(n+(n===1?" ordine si trova":" ordini si trovano")+" in questo stato: spostali prima in un altro.");return}
+    if(del.classList.contains("arm")){stages=stages.filter((_,k)=>k!==i);applyStages();saveStages()}
+    else{del.classList.add("arm");del.textContent="Elimina?";setTimeout(()=>{del.classList.remove("arm");del.textContent="✕"},3000)}
+  }
+});
+
+/* ---- scrittura ordini ---- */
 const queue=new Map();
 function write(id,patch){
   if(!fb)return;
@@ -185,7 +251,6 @@ function onErr(e){
   if(e&&/permission/i.test(e.code||e.message||"")){toast("Il database rifiuta la modifica. Controlla le regole di Firebase (vedi README).")}
   else toast("Salvataggio non riuscito. Riprova tra poco.");
 }
-
 document.addEventListener("change",e=>{
   const f=e.target.closest("[data-f]");if(!f)return;
   const tr=f.closest("tr");if(!tr||!tr.dataset.id)return;
@@ -193,7 +258,7 @@ document.addEventListener("change",e=>{
 });
 document.addEventListener("click",e=>{
   const st=e.target.closest("[data-st]");
-  if(st){const id=st.closest("tr").dataset.id;const n=+st.dataset.st;const d=docs.get(id);if(d&&d.st!==n)write(id,{st:n});return}
+  if(st){const id=st.closest("tr").dataset.id;const n=+st.dataset.st;const d=docs.get(id);if(d&&stages[stIdx(d)].id!==n)write(id,{st:n});return}
   const del=e.target.closest("[data-del]");
   if(del){
     if(del.classList.contains("arm")){const id=del.closest("tr").dataset.id;fb&&fb.ref("orders/"+id).remove().catch(onErr)}
@@ -205,12 +270,12 @@ $("#hideDone").addEventListener("change",render);
 $("#add").addEventListener("click",()=>{
   if(!fb)return;
   const me=$("#me").value.trim();
-  fb.ref("orders").push({client:"",ref:"",products:"",owner:me,orderDate:todayStr(),due:"",note:"",st:0,createdAt:Date.now(),updatedBy:who(),updatedAt:Date.now()})
+  fb.ref("orders").push({client:"",refCliente:"",refVigo:"",products:"",owner:me,orderDate:todayStr(),due:"",note:"",st:stages[0].id,createdAt:Date.now(),updatedBy:who(),updatedAt:Date.now()})
     .then(()=>{$("#gw").scrollTo({top:0,left:0})}).catch(onErr);
 });
 
 function fit(){const gw=$("#gw");const t=gw.getBoundingClientRect().top+window.scrollY;gw.style.height=Math.max(320,window.innerHeight-t-48)+"px"}
-addEventListener("resize",fit);fit();render();
+addEventListener("resize",fit);renderHead();fit();render();
 
 (function init(){
   const cfg=window.FIREBASE_CONFIG;
@@ -224,6 +289,12 @@ addEventListener("resize",fit);fit();render();
   $("#add").disabled=false;
   const timer=setTimeout(()=>{if(!loaded)setSync("err","Dati non raggiungibili al momento")},10000);
   fb.ref(".info/connected").on("value",s=>{if(loaded)setSync(s.val()?"ok":"err",s.val()?"Sincronizzato, modifiche condivise in tempo reale":"Offline: riconnessione in corso")});
+  fb.ref("config/stages").on("value",snap=>{
+    const v=snap.val();
+    const arr=v?Object.values(v).filter(x=>x&&x.name!=null&&x.id!=null).map(x=>({id:+x.id,name:String(x.name)})):[];
+    stages=arr.length>=2?arr:DEFAULT_STAGES.slice();
+    applyStages();
+  },err=>{if(/permission/i.test(err.code||err.message||""))toast("Per modificare gli stati aggiorna le regole di Firebase (vedi README).")});
   fb.ref("orders").on("value",snap=>{
     docs=new Map(Object.entries(snap.val()||{}));
     loaded=true;clearTimeout(timer);setSync("ok","Sincronizzato, modifiche condivise in tempo reale");

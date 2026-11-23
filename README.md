@@ -8,7 +8,7 @@ Pagina statica (GitHub Pages) + database Firebase Realtime Database (piano gratu
 ## Collegare il database (una volta sola, circa 5 minuti)
 1. Vai su https://console.firebase.google.com e crea un progetto (nome a piacere, Analytics non serve).
 2. Nel menu **Build > Realtime Database** clicca **Crea database**, scegli la regione Europa e avvia in **modalità di test**.
-3. Apri la scheda **Regole**, incolla il contenuto di `database.rules.json` e pubblica.
+3. Apri la scheda **Regole**, incolla il contenuto di `database.rules.json` (copre sia `orders` sia `config`, dove stanno gli stati) e pubblica.
 4. In **Impostazioni progetto (ingranaggio) > Generali > Le tue app** aggiungi un'app **Web** (icona `</>`), senza hosting.
 5. Copia i valori di `firebaseConfig` (apiKey, authDomain, databaseURL, projectId, appId) nel file `config.js`.
 6. Salva e fai commit: la pagina si collega da sola.
